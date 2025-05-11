@@ -5,16 +5,16 @@ import time
 import asyncio
 import os
 
-api_id = int(input("ادخل API ID: "))
-api_hash = input("ادخل API HASH: ")
+api_id = int(input("Enter your API ID: "))
+api_hash = input("Enter your API HASH: ")
 
 session_name = 'spider_session'
 client = TelegramClient(session_name, api_id, api_hash)
 
 async def transfer_members():
-    from_group = input("رابط الجروب اللي هتسحب منه: ")
-    to_group = input("رابط الجروب اللي هتضيف فيه: ")
-    limit = int(input("عدد الأعضاء اللي عايز تنقلهم: "))
+    from_group = input("Enter the source group username or link: ")
+    to_group = input("Enter the target group username or link: ")
+    limit = int(input("How many members to transfer: "))
 
     from_chat = await client.get_entity(from_group)
     to_chat = await client.get_entity(to_group)
@@ -28,7 +28,7 @@ async def transfer_members():
     ))
 
     users = participants.users
-    print(f"\nتم العثور على {len(users)} عضو. جاري محاولة الإضافة...\n")
+    print(f"\nFound {len(users)} users. Starting transfer...\n")
 
     added = 0
     failed_users = []
@@ -39,20 +39,20 @@ async def transfer_members():
                 channel=to_chat,
                 users=[user.id]
             ))
-            print(f"✅ تمت إضافة: {user.first_name}")
+            print(f"✅ Added: {user.first_name}")
             added += 1
         except Exception as e:
             error = str(e).lower()
-            name = user.first_name if hasattr(user, 'first_name') else "عضو"
+            name = user.first_name if hasattr(user, 'first_name') else "User"
 
             if "seconds" in error:
-                print("⛔ تيليجرام عمل حظر مؤقت. لازم تستنى.")
+                print("⛔ Telegram rate limit reached. Try again later.")
                 break
             elif "privacy" in error or "can't be invited" in error:
-                print(f"❌ {name} قافل إعدادات الإضافة.")
+                print(f"❌ {name} has invite restrictions.")
                 failed_users.append(user.username or name)
             else:
-                print(f"⚠️ فشل مع {name}: {e}")
+                print(f"⚠️ Failed to add {name}: {e}")
                 failed_users.append(user.username or name)
 
         time.sleep(5)
@@ -62,21 +62,21 @@ async def transfer_members():
             for u in failed_users:
                 f.write(f"{u}\n")
 
-    print(f"\n✅ تم الانتهاء. تمت إضافة {added} عضو. المحاولات الفاشلة محفوظة في failed.txt\n")
+    print(f"\n✅ Done. Successfully added {added} members. Failed attempts saved in failed.txt\n")
 
 async def main():
     while True:
-        print("\n--- قائمة Spider Calls ---")
-        print("1 - نقل الأعضاء من جروب لجروب")
-        print("2 - خروج")
-        print("3 - حذف السيشن الحالي وتسجيل برقم جديد")
+        print("\n--- Spider Calls Menu ---")
+        print("1 - Transfer members from one group to another")
+        print("2 - Exit")
+        print("3 - Delete current session and log in with another number")
 
-        choice = input("اختر رقم العملية: ")
+        choice = input("Choose an option: ")
 
         if choice == "1":
             await transfer_members()
         elif choice == "2":
-            print("خروج...")
+            print("Exiting...")
             break
         elif choice == "3":
             try:
@@ -87,12 +87,12 @@ async def main():
                 for file in session_files:
                     if os.path.exists(file):
                         os.remove(file)
-                print("✅ تم حذف الجلسة. أعد تشغيل السكربت لتسجيل الدخول برقم جديد.")
+                print("✅ Session deleted. Restart the script to log in again.")
                 break
             except Exception as e:
-                print(f"❌ حصل خطأ أثناء حذف السيشن: {e}")
+                print(f"❌ Error deleting session: {e}")
         else:
-            print("❌ اختيار غير صحيح")
+            print("❌ Invalid choice.")
 
 with client:
     client.loop.run_until_complete(main())
