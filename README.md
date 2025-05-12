@@ -96,5 +96,3 @@ For questions ,DM on Telegram:
 ## ⚠️ Disclaimer
 
 Use this script responsibly and in compliance with Telegram's Terms of Service. The developer is not responsible for any misuse or account restrictions resulting from improper use.
-
-```
